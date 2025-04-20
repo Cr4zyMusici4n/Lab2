@@ -23,6 +23,39 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
+ * /items/filter:
+ *   get:
+ *     summary: Получить отфильтрованный список товаров
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Поисковая строка (название товара)
+ *       - in: query
+ *         name: country
+ *         schema:
+ *           type: string
+ *         description: ID страны для фильтрации
+ *     responses:
+ *       200:
+ *         description: Отфильтрованный список товаров
+ */
+router.get('/filter', async (req, res) => {
+    try {
+        const { search = '', country = '0' } = req.query;
+
+        const filteredItems = await Item.getFiltered(search, country);
+
+        res.json(filteredItems);
+    } catch (error) {
+        console.error('Error fetching filtered items:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * @swagger
  * /items/{id}:
  *   get:
  *     summary: Получить товар по ID
@@ -49,33 +82,5 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /items/search:
- *   get:
- *     summary: Поиск товаров по названию
- *     parameters:
- *       - in: query
- *         name: q
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Результаты поиска
- */
-router.get('/search', async (req, res) => {
-    try {
-        const query = req.query.q;
-        if (!query) {
-            return res.status(400).json({ error: 'Query parameter "q" is required' });
-        }
-        const items = await Item.search(query);
-        res.json(items);
-    } catch (error) {
-        console.error('Error searching items:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 
 module.exports = router;
